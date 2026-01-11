@@ -28,6 +28,7 @@ class AcodePlugin {
           await runSanityTests(write);
 
 
+          write('\x1b[36m\x1b[1mTests completed!\x1b[0m\n');
         } catch (error) {
           write(`\x1b[31m⚠️ Test execution error: ${error.message}\x1b[0m\n`);
         }
