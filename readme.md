@@ -1,21 +1,10 @@
-# Acode plugin
+# TestCode
 
-Read acode plugin [documentation](https://docs.acode.app/docs/) to develop plugin for acode editor.
+**TestCode** is a plugin for testing Acode at runtime. It is useful for Acode contributors and plugin developers who want to ensure that their changes haven’t broken existing functionality.
 
-## Usage
+To run the tests, press **Ctrl + T**.
 
-Use this for debug build:
+Contributions are welcome! Feel free to add new tests to improve the overall effectiveness of the plugin.
 
-```
-npm run dev
-```
-
-and this for production build:
-
-```
-npm run build
-```
-
-## How to parse/bundle scss file ?
-
-You'll need to install one sass esbuild plugin and then just add that in `esbuild.config.mjs` at line 34
+Repository:
+https://github.com/RohitKushvaha01/TestCode
