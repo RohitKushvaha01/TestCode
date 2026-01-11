@@ -27,6 +27,9 @@ const COLORS = {
     BG_BLUE: '\x1b[44m',
 };
 
+// Spinner frames
+const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
 class TestRunner {
     constructor(name = 'Test Suite') {
         this.name = name;
@@ -34,19 +37,17 @@ class TestRunner {
         this.passed = 0;
         this.failed = 0;
         this.results = [];
-    }    /**
+    }
+
+    /**
      * Register a test
-     * @param {string} testName - Name of the test
-     * @param {function} testFn - Test function that should return true if passed
      */
     test(testName, testFn) {
         this.tests.push({ name: testName, fn: testFn });
     }
 
     /**
-     * Assert that a condition is true
-     * @param {boolean} condition - Condition to test
-     * @param {string} message - Message to display
+     * Assertions
      */
     assert(condition, message) {
         if (!condition) {
@@ -54,21 +55,14 @@ class TestRunner {
         }
     }
 
-    /**
-     * Assert equality
-     * @param {*} actual - Actual value
-     * @param {*} expected - Expected value
-     * @param {string} message - Message to display
-     */
     assertEqual(actual, expected, message) {
         if (actual !== expected) {
-            throw new Error(message || `Expected ${expected}, but got ${actual}`);
+            throw new Error(message || `Expected ${expected}, got ${actual}`);
         }
     }
 
     /**
      * Run all tests
-     * @param {function} writeOutput - Function to write output to terminal
      */
     async run(writeOutput) {
         const line = (text = '', color = '') => {
@@ -82,14 +76,35 @@ class TestRunner {
         line('╚════════════════════════════════════════════╝', COLORS.CYAN + COLORS.BRIGHT);
         line();
 
-        // Run tests
+        // Run tests with spinner
         for (const test of this.tests) {
+            let spinnerIndex = 0;
+            let active = true;
+
+            const spinner = setInterval(() => {
+                if (!active) return;
+                const frame = SPINNER_FRAMES[spinnerIndex++ % SPINNER_FRAMES.length];
+                writeOutput(
+                    `\r  ${COLORS.CYAN}${frame}${COLORS.RESET} Running ${test.name}...`
+                );
+            }, 80);
+
             try {
                 await test.fn(this);
+
+                active = false;
+                clearInterval(spinner);
+                writeOutput('\r\x1b[K');
+
                 this.passed++;
                 this.results.push({ name: test.name, status: 'PASS', error: null });
                 line(`  ${COLORS.GREEN}✓${COLORS.RESET} ${test.name}`, COLORS.GREEN);
+
             } catch (error) {
+                active = false;
+                clearInterval(spinner);
+                writeOutput('\r\x1b[K');
+
                 this.failed++;
                 this.results.push({ name: test.name, status: 'FAIL', error: error.message });
                 line(`  ${COLORS.RED}✗${COLORS.RESET} ${test.name}`, COLORS.RED + COLORS.BRIGHT);
@@ -102,11 +117,20 @@ class TestRunner {
         line('─────────────────────────────────────────────', COLORS.GRAY);
 
         const total = this.tests.length;
-        const percentage = ((this.passed / total) * 100).toFixed(1);
-        const passedColor = this.failed === 0 ? COLORS.GREEN : COLORS.YELLOW;
+        const percentage = total
+            ? ((this.passed / total) * 100).toFixed(1)
+            : '0.0';
 
-        line(`  Tests: ${COLORS.BRIGHT}${total}${COLORS.RESET} | ${passedColor}Passed: ${this.passed}${COLORS.RESET} | ${COLORS.RED}Failed: ${this.failed}${COLORS.RESET}`, passedColor);
-        line(`  Success Rate: ${passedColor}${percentage}%${COLORS.RESET}`, passedColor);
+        const statusColor = this.failed === 0 ? COLORS.GREEN : COLORS.YELLOW;
+
+        line(
+            `  Tests: ${COLORS.BRIGHT}${total}${COLORS.RESET} | ` +
+            `${statusColor}Passed: ${this.passed}${COLORS.RESET} | ` +
+            `${COLORS.RED}Failed: ${this.failed}${COLORS.RESET}`,
+            statusColor
+        );
+
+        line(`  Success Rate: ${statusColor}${percentage}%${COLORS.RESET}`, statusColor);
         line('─────────────────────────────────────────────', COLORS.GRAY);
         line();
 
@@ -114,14 +138,13 @@ class TestRunner {
     }
 
     /**
-     * Helper function to center text
-     * @private
+     * Center text helper
      */
     _padCenter(text, width) {
-        const totalPad = width - text.length;
-        const leftPad = Math.floor(totalPad / 2);
-        const rightPad = totalPad - leftPad;
-        return ' '.repeat(leftPad) + text + ' '.repeat(rightPad);
+        const pad = Math.max(0, width - text.length);
+        return ' '.repeat(Math.floor(pad / 2)) +
+            text +
+            ' '.repeat(Math.ceil(pad / 2));
     }
 }
 

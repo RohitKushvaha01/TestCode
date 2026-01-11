@@ -19,6 +19,7 @@ export async function runSanityTests(writeOutput) {
 
     // Test 3: Array operations
     runner.test('Array operations', (test) => {
+
         const arr = [1, 2, 3];
         test.assertEqual(arr.length, 3, 'Array length should be correct');
         test.assert(arr.includes(2), 'Array should include 2');
@@ -45,9 +46,11 @@ export async function runSanityTests(writeOutput) {
                 setTimeout(() => resolve('done'), 10);
             });
         };
+
         const result = await asyncFunc();
         test.assertEqual(result, 'done', 'Async function should work correctly');
     });
+
 
     // Test 7: Error handling
     runner.test('Error handling', (test) => {
