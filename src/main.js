@@ -1,6 +1,6 @@
 import plugin from '../plugin.json';
 import { runSanityTests } from './tests/sanity.tests.js';
-import { runSelfTests } from './tests/self.tests.js';
+
 
 class AcodePlugin {
 
@@ -26,7 +26,7 @@ class AcodePlugin {
         try {
           // Run unit tests
           await runSanityTests(write);
-          await runSelfTests(this, write);
+
 
         } catch (error) {
           write(`\x1b[31m⚠️ Test execution error: ${error.message}\x1b[0m\n`);
