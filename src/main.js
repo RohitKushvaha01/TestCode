@@ -1,5 +1,6 @@
 import plugin from '../plugin.json';
 import { runSanityTests } from './tests/sanity.tests.js';
+import { runAceEditorTests } from './tests/editor.tests.js';
 
 
 class AcodePlugin {
@@ -26,6 +27,7 @@ class AcodePlugin {
         try {
           // Run unit tests
           await runSanityTests(write);
+          await runAceEditorTests(write);
 
 
           write('\x1b[36m\x1b[1mTests completed!\x1b[0m\n');

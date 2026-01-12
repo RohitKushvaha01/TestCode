@@ -27,6 +27,11 @@ const COLORS = {
     BG_BLUE: '\x1b[44m',
 };
 
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
 // Spinner frames
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 
@@ -90,6 +95,7 @@ class TestRunner {
             }, 80);
 
             try {
+                await delay(500)
                 await test.fn(this);
 
                 active = false;
