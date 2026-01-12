@@ -31,6 +31,25 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function startSpinner(writeOutput, text) {
+    let index = 0;
+    let active = true;
+
+    const timer = setInterval(() => {
+        if (!active) return;
+        const frame = SPINNER_FRAMES[index++ % SPINNER_FRAMES.length];
+        // \r moves cursor to start, \x1b[K clears the line to the right
+        writeOutput(`\r  ${COLORS.CYAN}${frame}${COLORS.RESET} ${text}`);
+    }, 80);
+
+    return () => {
+        active = false;
+        clearInterval(timer);
+        // Clear the line so the "Success/Fail" message can take its place
+        writeOutput('\r\x1b[K');
+    };
+}
+
 
 // Spinner frames
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
@@ -66,6 +85,37 @@ class TestRunner {
         }
     }
 
+
+    async _runWithTimeout(fn, ctx, timeoutMs) {
+        return new Promise((resolve, reject) => {
+            let finished = false;
+
+            const timer = setTimeout(() => {
+                if (finished) return;
+                finished = true;
+                reject(new Error(`Test timed out after ${timeoutMs}ms`));
+            }, timeoutMs);
+
+            Promise.resolve()
+                .then(() => fn(ctx))
+                .then((result) => {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    resolve(result);
+                })
+                .catch((err) => {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    reject(err);
+                });
+        });
+    }
+
+
+
+
     /**
      * Run all tests
      */
@@ -83,39 +133,32 @@ class TestRunner {
 
         // Run tests with spinner
         for (const test of this.tests) {
-            let spinnerIndex = 0;
-            let active = true;
+            const stopSpinner = startSpinner(
+                writeOutput,
+                `Running ${test.name}...`
+            );
 
-            const spinner = setInterval(() => {
-                if (!active) return;
-                const frame = SPINNER_FRAMES[spinnerIndex++ % SPINNER_FRAMES.length];
-                writeOutput(
-                    `\r  ${COLORS.CYAN}${frame}${COLORS.RESET} Running ${test.name}...`
-                );
-            }, 80);
 
             try {
-                await delay(500)
-                await test.fn(this);
+                await delay(500);
 
-                active = false;
-                clearInterval(spinner);
-                writeOutput('\r\x1b[K');
+                await this._runWithTimeout(test.fn, this, 3000);
+
+                stopSpinner();
 
                 this.passed++;
                 this.results.push({ name: test.name, status: 'PASS', error: null });
                 line(`  ${COLORS.GREEN}✓${COLORS.RESET} ${test.name}`, COLORS.GREEN);
 
             } catch (error) {
-                active = false;
-                clearInterval(spinner);
-                writeOutput('\r\x1b[K');
+                stopSpinner();
 
                 this.failed++;
                 this.results.push({ name: test.name, status: 'FAIL', error: error.message });
                 line(`  ${COLORS.RED}✗${COLORS.RESET} ${test.name}`, COLORS.RED + COLORS.BRIGHT);
                 line(`     ${COLORS.DIM}└─ ${error.message}${COLORS.RESET}`, COLORS.RED + COLORS.DIM);
             }
+
         }
 
         // Summary

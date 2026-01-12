@@ -1,10 +1,10 @@
 {
-  "name": "acode-plugin",
+  "name": "testcode",
   "version": "1.0.0",
-  "description": "Template for Acode plugin",
+  "description": "Acode plugin for runtime unit tests",
   "main": "src/main.js",
-  "repository": "https://github.com/Acode-Foundation/acode-plugin.git",
-  "author": "Acode Foundation",
+  "repository": "https://github.com/RohitKushvaha01/TestCode",
+  "author": "Rohit Kushwaha",
   "license": "MIT",
   "dependencies": {
     "@types/ace": "^0.0.52",
